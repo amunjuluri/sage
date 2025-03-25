@@ -48,7 +48,7 @@ export default function CallbackRequests() {
         {
           id: "cr1",
           studentId: "s1",
-          studentName: "Alex Johnson",
+          studentName: "Student 1",
           studentCourse: "Computer Science",
           studentYear: 2,
           studentPhone: "+15551234567", // Mock phone number
@@ -60,7 +60,7 @@ export default function CallbackRequests() {
         {
           id: "cr2",
           studentId: "s2",
-          studentName: "Jamie Smith",
+          studentName: "Student 2",
           studentCourse: "Mathematics",
           studentYear: 3,
           studentPhone: "+15559876543", // Mock phone number
@@ -74,7 +74,7 @@ export default function CallbackRequests() {
         {
           id: "cr3",
           studentId: "s3",
-          studentName: "Taylor Wong",
+          studentName: "Student 3",
           studentCourse: "Physics",
           studentYear: 1,
           studentPhone: "+15555678901", // Mock phone number
@@ -86,7 +86,7 @@ export default function CallbackRequests() {
         {
           id: "cr4",
           studentId: "s1",
-          studentName: "Alex Johnson",
+          studentName: "Student 1",
           studentCourse: "Computer Science",
           studentYear: 2,
           studentPhone: "+15551234567", // Mock phone number
@@ -100,7 +100,7 @@ export default function CallbackRequests() {
         {
           id: "cr5",
           studentId: "s2",
-          studentName: "Jamie Smith",
+          studentName: "Student 2",
           studentCourse: "Mathematics",
           studentYear: 3,
           studentPhone: "+15559876543", // Mock phone number

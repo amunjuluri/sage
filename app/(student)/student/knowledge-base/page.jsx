@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { knowledgeBase } from '@/lib/data/mockData';
+import { knowledgeBase } from '../../../../lib/data/mockData';
 
 export default function KnowledgeBase() {
   const [articles, setArticles] = useState([]);

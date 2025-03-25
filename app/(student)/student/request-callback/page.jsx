@@ -78,21 +78,21 @@ export default function RequestCallback() {
             const mockTeachers = [
               {
                 id: "t1",
-                name: "Dr. Sarah Richards",
+                name: "Professor 1",
                 department: "Computer Science",
                 expertise: ["Programming", "Data Structures", "Algorithms"],
                 knowledgeBaseId: "kb_cs_programming"
               },
               {
                 id: "t2",
-                name: "Prof. Michael Chen",
+                name: "PProfessor 2",
                 department: "Mathematics",
                 expertise: ["Calculus", "Linear Algebra", "Statistics"],
                 knowledgeBaseId: "kb_math_calculus"
               },
               {
                 id: "t3",
-                name: "Dr. Emily Patel",
+                name: "Professor 3",
                 department: "Computer Science",
                 expertise: ["Artificial Intelligence", "Machine Learning"],
                 knowledgeBaseId: "kb_cs_ai"
