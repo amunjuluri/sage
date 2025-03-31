@@ -1,29 +1,28 @@
+// app/(teacher)/layout.jsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function TeacherLayout({ children }) {
-  const [teacher, setTeacher] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedTeacher = sessionStorage.getItem('teacher');
-    if (!storedTeacher) {
-      router.push('/teacher-login');
-      return;
+    // If session is loaded and user is not a teacher, redirect
+    if (status === 'authenticated' && session.user.role !== 'TEACHER') {
+      router.push('/login');
     }
-    
-    setTeacher(JSON.parse(storedTeacher));
-  }, [router]);
+  }, [session, status, router]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('teacher');
-    router.push('/teacher-login');
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/login');
   };
 
   const navigation = [
@@ -35,8 +34,13 @@ export default function TeacherLayout({ children }) {
     { name: 'Settings', href: '/teacher/settings', icon: SettingsIcon },
   ];
 
-  if (!teacher) {
+  if (status === 'loading') {
     return <div className="min-h-screen flex justify-center items-center">Loading...</div>;
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/login');
+    return null;
   }
 
   return (
@@ -98,9 +102,9 @@ export default function TeacherLayout({ children }) {
               <div className="flex items-center">
                 <div className="relative">
                   <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                    <span className="hidden md:inline-block">{teacher.name}</span>
+                    <span className="hidden md:inline-block">{session.user.name}</span>
                     <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                      {teacher.name.charAt(0)}
+                      {session.user.name.charAt(0)}
                     </div>
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden">

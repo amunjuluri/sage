@@ -1,11 +1,12 @@
+// app/(student)/student/request-callback/page.jsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { useSession } from 'next-auth/react';
 
 export default function RequestCallback() {
-  const [student, setStudent] = useState(null);
   const [assignedTeachers, setAssignedTeachers] = useState([]);
   const [callbackRequests, setCallbackRequests] = useState([]);
   const [formData, setFormData] = useState({
@@ -21,42 +22,43 @@ export default function RequestCallback() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   useEffect(() => {
-    // Get student info from session storage
-    const storedStudent = sessionStorage.getItem('student');
-    if (!storedStudent) {
-      router.push('/student-login');
-      return;
-    }
-    
-    const studentData = JSON.parse(storedStudent);
-    setStudent(studentData);
-    
-    // Pre-fill phone number from student data if available
-    if (studentData.phoneNumber) {
-      setFormData(prev => ({ ...prev, phoneNumber: studentData.phoneNumber }));
-    }
+    if (!session) return;
     
     // Fetch data
-    fetchData(studentData.id);
-  }, [router]);
+    fetchData(session.user.studentId);
+    
+    // Pre-fill phone number from student data if available
+    if (session.user.phoneNumber) {
+      setFormData(prev => ({ ...prev, phoneNumber: session.user.phoneNumber }));
+    }
+  }, [session]);
 
   const fetchData = async (studentId) => {
     setIsLoading(true);
     try {
-      // Fetch assigned teachers from API
-      const teachersResponse = await fetchAssignedTeachers(studentId);
-      setAssignedTeachers(teachersResponse);
+      // Fetch assigned teachers
+      const teachersResponse = await fetch(`/api/students/${studentId}/teachers`);
+      const teachersData = await teachersResponse.json();
       
-      // Set default teacher if available
-      if (teachersResponse.length > 0) {
-        setFormData(prev => ({ ...prev, teacherId: teachersResponse[0].id }));
+      if (teachersResponse.ok) {
+        setAssignedTeachers(teachersData.teachers);
+        
+        // Set default teacher if available
+        if (teachersData.teachers.length > 0) {
+          setFormData(prev => ({ ...prev, teacherId: teachersData.teachers[0].id }));
+        }
       }
       
-      // Fetch callback requests from API
-      const requestsResponse = await fetchCallbackRequests(studentId);
-      setCallbackRequests(requestsResponse);
+      // Fetch callback requests
+      const requestsResponse = await fetch(`/api/callback-requests?studentId=${studentId}`);
+      const requestsData = await requestsResponse.json();
+      
+      if (requestsResponse.ok) {
+        setCallbackRequests(requestsData.callbackRequests);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       setSubmitStatus({
@@ -68,96 +70,12 @@ export default function RequestCallback() {
     }
   };
 
-  // Fetch assigned teachers from the API
-  const fetchAssignedTeachers = async (studentId) => {
-    try {
-      // In development without a real backend, use the mock data
-      if (process.env.NODE_ENV === 'development') {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            const mockTeachers = [
-              {
-                id: "t1",
-                name: "Professor 1",
-                department: "Computer Science",
-                expertise: ["Programming", "Data Structures", "Algorithms"],
-                knowledgeBaseId: "kb_cs_programming"
-              },
-              {
-                id: "t2",
-                name: "PProfessor 2",
-                department: "Mathematics",
-                expertise: ["Calculus", "Linear Algebra", "Statistics"],
-                knowledgeBaseId: "kb_math_calculus"
-              },
-              {
-                id: "t3",
-                name: "Professor 3",
-                department: "Computer Science",
-                expertise: ["Artificial Intelligence", "Machine Learning"],
-                knowledgeBaseId: "kb_cs_ai"
-              }
-            ];
-            
-            resolve(mockTeachers);
-          }, 500);
-        });
-      }
-      
-      // In production, make actual API call
-      const response = await axios.get(`/api/teachers?studentId=${studentId}`);
-      return response.data.teachers;
-    } catch (error) {
-      console.error('Error fetching assigned teachers:', error);
-      return [];
-    }
-  };
-
-  // Fetch callback requests from the API
-  const fetchCallbackRequests = async (studentId) => {
-    try {
-      // In development without a real backend, use the mock data
-      if (process.env.NODE_ENV === 'development') {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            const mockCallbackRequests = [
-              {
-                id: "cr1",
-                studentId: studentId,
-                teacherId: "t1",
-                subject: "Help with Assignment 3",
-                message: "I'm struggling with the recursion section of assignment 3. Could you help me understand it better?",
-                requestedDate: "2025-02-25T14:30:00",
-                status: "pending"
-              },
-              {
-                id: "cr2",
-                studentId: studentId,
-                teacherId: "t2",
-                subject: "Question about Linear Algebra",
-                message: "I have questions about the eigenvalue problems we covered last week.",
-                requestedDate: "2025-02-26T10:00:00",
-                status: "scheduled"
-              }
-            ];
-            
-            resolve(mockCallbackRequests);
-          }, 500);
-        });
-      }
-      
-      // In production, make actual API call
-      const response = await axios.get(`/api/callback-requests?studentId=${studentId}`);
-      return response.data.callbackRequests;
-    } catch (error) {
-      console.error('Error fetching callback requests:', error);
-      return [];
-    }
-  };
-
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
     
     // Clear error when field is modified
     if (formErrors[name]) {
@@ -205,56 +123,57 @@ export default function RequestCallback() {
     setIsSaving(true);
     
     try {
-      // Always set immediateCall to true
-      const requestData = {
-        studentId: student.id,
-        teacherId: formData.teacherId,
-        subject: formData.subject,
-        message: formData.message,
-        requestedDate: formData.requestedDate,
-        immediateCall: true, // Always true as requested
-        phoneNumber: formData.phoneNumber // Include phone number
-      };
-      
-      console.log('Submitting request with data:', requestData);
-      
-      // Make API call to create a callback request with Bland AI integration
-      const response = await axios.post('/api/callback-requests', requestData);
-      
-      if (response.data.success) {
-        // Add the new request to the list
-        setCallbackRequests(prev => [...prev, response.data.request]);
-        
-        // Show success message
-        setSubmitStatus({
-          type: 'success',
-          message: response.data.message || 'Your callback request has been submitted. You will receive a call shortly!'
-        });
-        
-        // Reset form but keep phone number and teacher
-        setFormData({
+      const response = await fetch('/api/callback-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           teacherId: formData.teacherId,
-          subject: '',
-          message: '',
-          requestedDate: formatDateForInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
-          immediateCall: true,
+          subject: formData.subject,
+          message: formData.message,
+          requestedDate: formData.requestedDate,
+          immediateCall: formData.immediateCall,
           phoneNumber: formData.phoneNumber
-        });
-      } else {
-        throw new Error(response.data.error || 'Failed to create callback request');
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create callback request');
       }
+      
+      // Add the new request to the list
+      setCallbackRequests(prev => [data.request, ...prev]);
+      
+      // Show success message
+      setSubmitStatus({
+        type: 'success',
+        message: data.message || 'Your callback request has been submitted. You will receive a call shortly!'
+      });
+      
+      // Reset form but keep phone number and teacher
+      setFormData({
+        teacherId: formData.teacherId,
+        subject: '',
+        message: '',
+        requestedDate: formatDateForInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
+        immediateCall: true,
+        phoneNumber: formData.phoneNumber
+      });
     } catch (error) {
       console.error('Error submitting callback request:', error);
       setSubmitStatus({
         type: 'error',
-        message: error.response?.data?.error || error.message || 'There was an error submitting your request. Please try again.'
+        message: error.message || 'There was an error submitting your request. Please try again.'
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (!student || isLoading) {
+  if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-center h-64">
@@ -304,7 +223,7 @@ export default function RequestCallback() {
                     {assignedTeachers.length > 0 ? (
                       assignedTeachers.map(teacher => (
                         <option key={teacher.id} value={teacher.id}>
-                          {teacher.name} - {teacher.department}
+                          {teacher.user.name} - {teacher.department}
                         </option>
                       ))
                     ) : (
@@ -432,8 +351,7 @@ export default function RequestCallback() {
               {callbackRequests.length > 0 ? (
                 <ul className="divide-y divide-gray-200">
                   {callbackRequests.map((request) => {
-                    const teacher = assignedTeachers.find(t => t.id === request.teacherId);
-                    const teacherName = teacher ? teacher.name : 'Unknown Professor';
+                    const teacherName = request.teacher?.user?.name || 'Unknown Teacher';
                     
                     return (
                       <li key={`request-${request.id}`} className="py-4">
@@ -444,7 +362,7 @@ export default function RequestCallback() {
                               inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                               ${getStatusColor(request.status)}
                             `}>
-                              {capitalizeFirstLetter(request.status)}
+                              {formatStatus(request.status)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-500">With: {teacherName}</p>
@@ -506,21 +424,21 @@ function formatDateForInput(date) {
 
 function getStatusColor(status) {
   switch (status) {
-    case 'pending':
+    case 'PENDING':
       return 'bg-yellow-100 text-yellow-800';
-    case 'scheduled':
+    case 'SCHEDULED':
       return 'bg-green-100 text-green-800';
-    case 'completed':
+    case 'COMPLETED':
       return 'bg-blue-100 text-blue-800';
-    case 'cancelled':
+    case 'CANCELLED':
       return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
 }
 
-function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
+function formatStatus(status) {
+  return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
 // Icons

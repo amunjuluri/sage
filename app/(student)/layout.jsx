@@ -1,29 +1,28 @@
+// app/(student)/layout.jsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function StudentLayout({ children }) {
-  const [student, setStudent] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedStudent = sessionStorage.getItem('student');
-    if (!storedStudent) {
-      router.push('/student-login');
-      return;
+    // If session is loaded and user is not a student, redirect
+    if (status === 'authenticated' && session.user.role !== 'STUDENT') {
+      router.push('/login');
     }
-    
-    setStudent(JSON.parse(storedStudent));
-  }, [router]);
+  }, [session, status, router]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('student');
-    router.push('/student-login');
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/login');
   };
 
   const navigation = [
@@ -34,8 +33,13 @@ export default function StudentLayout({ children }) {
     { name: 'Knowledge Base', href: '/student/knowledge-base', icon: FolderIcon },
   ];
 
-  if (!student) {
+  if (status === 'loading') {
     return <div className="min-h-screen flex justify-center items-center">Loading...</div>;
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/login');
+    return null;
   }
 
   return (
@@ -97,9 +101,9 @@ export default function StudentLayout({ children }) {
               <div className="flex items-center">
                 <div className="relative">
                   <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                    <span className="hidden md:inline-block">{student.name}</span>
+                    <span className="hidden md:inline-block">{session.user.name}</span>
                     <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      {student.name.charAt(0)}
+                      {session.user.name.charAt(0)}
                     </div>
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden">
@@ -160,7 +164,6 @@ function SidebarContent({ navigation, pathname }) {
     </nav>
   );
 }
-
 // Icons
 function HomeIcon({ className }) {
   return (

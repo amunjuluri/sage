@@ -1,0 +1,152 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or your preferred database
+  url      = env("DATABASE_URL")
+}
+
+// User model with role-based design
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  password       String?          // Hashed password (null if using OAuth)
+  name           String
+  role           UserRole         @default(STUDENT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  // Common fields
+  phoneNumber    String?
+  
+  // Role-specific relations
+  student        Student?         // If role is STUDENT
+  teacher        Teacher?         // If role is TEACHER
+  
+  // Auth.js fields
+  accounts       Account[]
+  sessions       Session[]
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+// Student-specific data
+model Student {
+  id              String            @id @default(cuid())
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String            @unique
+  course          String
+  year            Int
+  callbackRequests CallbackRequest[] @relation("StudentCallbacks")
+  teacherAssignments StudentTeacher[]
+}
+
+// Teacher-specific data
+model Teacher {
+  id               String             @id @default(cuid())
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String             @unique
+  department       String
+  expertise        String[]
+  voiceId          String?            // For Bland AI integration
+  knowledgeBaseId  String?            // Teacher-specific knowledge base ID
+  callbackRequests CallbackRequest[]  @relation("TeacherCallbacks")
+  studentAssignments StudentTeacher[]
+  knowledgeArticles KnowledgeArticle[]
+}
+
+// Many-to-many relationship between students and teachers
+model StudentTeacher {
+  id        String   @id @default(cuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId String
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, teacherId])
+}
+
+// Callback request model
+model CallbackRequest {
+  id            String   @id @default(cuid())
+  student       Student  @relation("StudentCallbacks", fields: [studentId], references: [id])
+  studentId     String
+  teacher       Teacher  @relation("TeacherCallbacks", fields: [teacherId], references: [id])
+  teacherId     String
+  subject       String
+  message       String   @db.Text
+  requestedDate DateTime
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  scheduledDate DateTime?
+  completedDate DateTime?
+  cancelledReason String?
+  callId        String?     // Bland AI call ID
+  phoneNumber   String?     // Phone number for callback
+}
+
+enum RequestStatus {
+  PENDING
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// Knowledge base article model
+model KnowledgeArticle {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  category    String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId   String
+  tags        String[]
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Next-Auth models
+model Account {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?   @db.Text
+  access_token       String?   @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?   @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
