@@ -46,14 +46,7 @@ export async function GET(request, { params }) {
     });
     
     // Format the response
-    const teachers = assignments.map(assignment => ({
-      ...assignment.teacher,
-      user: {
-        ...assignment.teacher.user
-      },
-      // Make sure the knowledge base ID is specifically included
-      knowledgeBaseId: assignment.teacher.knowledgeBaseId
-    }));
+    const teachers = assignments.map(assignment => assignment.teacher);
     
     return NextResponse.json({ teachers });
   } catch (error) {
