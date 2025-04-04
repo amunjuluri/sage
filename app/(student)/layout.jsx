@@ -27,7 +27,7 @@ export default function StudentLayout({ children }) {
 
   const navigation = [
     { name: 'Dashboard', href: '/student/dashboard', icon: HomeIcon },
-    { name: 'Chat Assistant', href: '/student/chat', icon: ChatIcon },
+  
     { name: 'Request Callback', href: '/student/request-callback', icon: PhoneIcon },
     { name: 'Study Assistant', href: '/student/study-assistant', icon: BookIcon },
     { name: 'Knowledge Base', href: '/student/knowledge-base', icon: FolderIcon },

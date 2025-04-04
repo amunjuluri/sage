@@ -1,23 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getStudentCallbackRequests, knowledgeBase } from '../../../../lib/data/mockData';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { getStudentCallbackRequests, knowledgeBase } from '../../../../lib/data/mockData';
 
 export default function StudentDashboard() {
-  const [student, setStudent] = useState(null);
   const [callbackRequests, setCallbackRequests] = useState([]);
   const [recentKnowledgeArticles, setRecentKnowledgeArticles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Get student info from session storage
-    const storedStudent = sessionStorage.getItem('student');
-    if (storedStudent) {
-      const studentData = JSON.parse(storedStudent);
-      setStudent(studentData);
-      
+    // Only fetch data when session is loaded and student is authenticated
+    if (status === 'authenticated' && session.user && session.user.role === 'STUDENT') {
+      fetchDashboardData(session.user.studentId);
+    } else if (status === 'unauthenticated') {
+      // If user is not authenticated, redirect to login
+      router.push('/student-login');
+    }
+  }, [session, status, router]);
+
+  const fetchDashboardData = async (studentId) => {
+    setIsLoading(true);
+    try {
       // Get callback requests for this student
-      const requests = getStudentCallbackRequests(studentData.id);
+      const requests = getStudentCallbackRequests(studentId);
       setCallbackRequests(requests);
       
       // Get recent knowledge base articles
@@ -25,25 +35,32 @@ export default function StudentDashboard() {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
       setRecentKnowledgeArticles(sortedArticles.slice(0, 3));
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  };
 
-  if (!student) {
-    return <div>Loading...</div>;
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // If not authenticated, this will be caught in the useEffect
+  if (status === 'unauthenticated') {
+    return null; // Don't render anything while redirecting
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Welcome, {student.name}</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Welcome, {session.user.name}</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <DashboardCard
-          title="AI Chat Assistant"
-          description="Ask questions and get instant answers about university processes, courses, and more."
-          icon={<ChatIcon />}
-          linkText="Ask a question"
-          linkHref="/student/chat"
-        />
+        
         <DashboardCard
           title="Request Callback"
           description="Schedule a call with a professor for personalized guidance and support."
@@ -183,14 +200,6 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// Icons
-function ChatIcon() {
-  return (
-    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-    </svg>
-  );
-}
 
 function PhoneIcon() {
   return (
