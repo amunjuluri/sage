@@ -3,29 +3,31 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function TeacherDashboard() {
-  const [teacher, setTeacher] = useState(null);
   const [pendingCallbacks, setPendingCallbacks] = useState([]);
   const [recentKnowledgeBase, setRecentKnowledgeBase] = useState([]);
   const [studentEngagement, setStudentEngagement] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-
+  const { data: session, status } = useSession();
+  
   useEffect(() => {
-    // Get teacher info from session storage
-    const storedTeacher = sessionStorage.getItem('teacher');
-    if (!storedTeacher) {
-      router.push('/teacher-login');
-      return;
+    // If session is loaded and user is not a teacher, redirect
+    if (status === 'authenticated') {
+      if (session.user.role !== 'TEACHER') {
+        router.push('/login');
+        return;
+      }
+      
+      // Fetch data once we confirm the user is a teacher
+      fetchDashboardData(session.user.id);
+    } else if (status === 'unauthenticated') {
+      // If not authenticated, redirect to login
+      router.push('/login');
     }
-    
-    const teacherData = JSON.parse(storedTeacher);
-    setTeacher(teacherData);
-    
-    // Fetch data
-    fetchDashboardData(teacherData.id);
-  }, [router]);
+  }, [session, status, router]);
 
   const fetchDashboardData = async (teacherId) => {
     setIsLoading(true);
@@ -152,7 +154,7 @@ export default function TeacherDashboard() {
     );
   };
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -160,10 +162,15 @@ export default function TeacherDashboard() {
     );
   }
 
+  // If not authenticated, return null (we've already triggered a redirect in the useEffect)
+  if (status === 'unauthenticated') {
+    return null;
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {teacher?.name}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome, {session?.user?.name}</h1>
         <p className="text-gray-500">
           {new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 

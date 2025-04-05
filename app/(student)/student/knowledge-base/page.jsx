@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { knowledgeBase } from '../../../../lib/data/mockData';
+import { knowledgeBase, knowledgeBases, teachers } from '@/lib/data/mockData';
 
 export default function KnowledgeBase() {
   const [articles, setArticles] = useState([]);
@@ -9,6 +9,8 @@ export default function KnowledgeBase() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [categories, setCategories] = useState(['All']);
+  const [availableKnowledgeBases, setAvailableKnowledgeBases] = useState([]);
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('All');
 
   useEffect(() => {
     // Get all articles
@@ -18,12 +20,19 @@ export default function KnowledgeBase() {
     const uniqueCategories = ['All', ...new Set(knowledgeBase.map(article => article.category))];
     setCategories(uniqueCategories);
     
+    // Get all available knowledge bases
+    // In a real app, you would fetch knowledge bases that the student has access to
+    setAvailableKnowledgeBases([
+      { id: 'All', name: 'All Knowledge Bases' },
+      ...knowledgeBases
+    ]);
+    
     // Initial filtering
     setFilteredArticles(knowledgeBase);
   }, []);
 
   useEffect(() => {
-    // Filter articles based on search query and category
+    // Filter articles based on search query, category and knowledge base
     let filtered = articles;
     
     if (searchQuery) {
@@ -38,8 +47,17 @@ export default function KnowledgeBase() {
       filtered = filtered.filter(article => article.category === selectedCategory);
     }
     
+    if (selectedKnowledgeBase !== 'All') {
+      // In a real app, you would filter by knowledge base ID
+      // For now, let's simulate filtering by teacher
+      const kb = knowledgeBases.find(kb => kb.id === selectedKnowledgeBase);
+      if (kb) {
+        filtered = filtered.filter(article => article.teacherId === kb.ownerId);
+      }
+    }
+    
     setFilteredArticles(filtered);
-  }, [searchQuery, selectedCategory, articles]);
+  }, [searchQuery, selectedCategory, selectedKnowledgeBase, articles]);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -49,13 +67,23 @@ export default function KnowledgeBase() {
     setSelectedCategory(e.target.value);
   };
 
+  const handleKnowledgeBaseChange = (e) => {
+    setSelectedKnowledgeBase(e.target.value);
+  };
+
+  // Get teacher name for display
+  const getTeacherName = (teacherId) => {
+    const teacher = teachers.find(t => t.id === teacherId);
+    return teacher ? teacher.name : 'Unknown Teacher';
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Knowledge Base</h1>
       
       <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
         <div className="px-4 py-5 sm:p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="md:col-span-2">
               <label htmlFor="search" className="sr-only">Search articles</label>
               <div className="relative rounded-md shadow-sm">
@@ -73,7 +101,22 @@ export default function KnowledgeBase() {
               </div>
             </div>
             <div>
-              <label htmlFor="category" className="sr-only">Category</label>
+              <label htmlFor="knowledge-base" className="block text-sm font-medium text-gray-700">Knowledge Base</label>
+              <select
+                id="knowledge-base"
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={selectedKnowledgeBase}
+                onChange={handleKnowledgeBaseChange}
+              >
+                {availableKnowledgeBases.map(kb => (
+                  <option key={kb.id} value={kb.id}>
+                    {kb.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
               <select
                 id="category"
                 className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -106,9 +149,14 @@ export default function KnowledgeBase() {
                   <article className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium text-gray-900">{article.title}</h3>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {article.category}
-                      </span>
+                      <div className="flex space-x-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {article.category}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          {getTeacherName(article.teacherId)}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-gray-500 line-clamp-2">
                       {article.content.substring(0, 200)}...
@@ -136,6 +184,26 @@ export default function KnowledgeBase() {
           )}
         </div>
       </div>
+      
+      {/* Knowledge Base Info */}
+      <div className="mt-6 bg-blue-50 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <InformationCircleIcon className="h-6 w-6 text-blue-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-blue-800">About Knowledge Bases</h3>
+            <p className="mt-1 text-sm text-blue-600">
+              Our knowledge base contains articles written by your professors to help you with common questions and topics. 
+              You can filter articles by category or professor's knowledge base to find the information you need.
+            </p>
+            <p className="mt-2 text-sm text-blue-600">
+              <strong>Can't find what you're looking for?</strong> Request a callback from a professor 
+              for personalized assistance with complex topics.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -153,6 +221,14 @@ function DocumentIcon({ className }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function InformationCircleIcon({ className }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   );
 }

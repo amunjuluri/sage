@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { 
   getKnowledgeBases, 
   getKnowledgeBaseDocuments, 
@@ -20,23 +21,31 @@ export default function TeacherKnowledgeBase() {
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState('articles'); // 'articles' or 'search'
   const [currentKnowledgeBase, setCurrentKnowledgeBase] = useState(null);
+  const [showKnowledgeBaseModal, setShowKnowledgeBaseModal] = useState(false);
+  const [isNewKnowledgeBase, setIsNewKnowledgeBase] = useState(true);
+  const [knowledgeBaseForm, setKnowledgeBaseForm] = useState({
+    id: '',
+    name: '',
+    description: ''
+  });
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Get teacher info from session storage
-    const storedTeacher = sessionStorage.getItem('teacher');
-    if (!storedTeacher) {
-      router.push('/teacher-login');
-      return;
+    // If session is loaded and user is not a teacher, redirect
+    if (status === 'authenticated') {
+      if (session.user.role !== 'TEACHER') {
+        router.push('/login');
+        return;
+      }
+      
+      // Fetch knowledge bases once session is authenticated
+      fetchKnowledgeBases(session.user.id);
+    } else if (status === 'unauthenticated') {
+      // If not authenticated, redirect to login
+      router.push('/login');
     }
-    
-    const teacherData = JSON.parse(storedTeacher);
-    setTeacher(teacherData);
-    
-    // Fetch knowledge bases
-    fetchKnowledgeBases(teacherData.id);
-  }, [router]);
-
+  }, [session, status, router]);
   const fetchKnowledgeBases = async (teacherId) => {
     setIsLoading(true);
     try {
@@ -53,8 +62,8 @@ export default function TeacherKnowledgeBase() {
         // This would normally call createTeacherKnowledgeBase
         teacherKnowledgeBases.push({
           id: `kb_${teacherId}_default`,
-          name: `${teacher.name}'s Knowledge Base`,
-          description: `Default knowledge base for ${teacher.name}`,
+          name: `${session.user.name}'s Knowledge Base`,
+          description: `Default knowledge base for ${session.user.name}`,
           ownerId: teacherId,
           documentCount: 0,
           createdAt: new Date().toISOString()
@@ -67,8 +76,8 @@ export default function TeacherKnowledgeBase() {
       setKnowledgeBases(teacherKnowledgeBases);
       
       // Set the current knowledge base to teacher's primary one
-      const primaryKnowledgeBase = teacherKnowledgeBases.find(kb => kb.id === teacher.knowledgeBaseId) || 
-                                 teacherKnowledgeBases[0];
+      const primaryKnowledgeBase = teacherKnowledgeBases.find(kb => kb.id === session.user.knowledgeBaseId) || 
+                           teacherKnowledgeBases[0];
       
       setCurrentKnowledgeBase(primaryKnowledgeBase);
       
@@ -226,6 +235,101 @@ export default function TeacherKnowledgeBase() {
     setArticles(prev => prev.filter(article => article.id !== articleId));
   };
 
+  const openNewKnowledgeBaseModal = () => {
+    setKnowledgeBaseForm({
+      id: '',
+      name: '',
+      description: ''
+    });
+    setIsNewKnowledgeBase(true);
+    setShowKnowledgeBaseModal(true);
+  };
+
+  const openEditKnowledgeBaseModal = (kb) => {
+    setKnowledgeBaseForm({
+      id: kb.id,
+      name: kb.name,
+      description: kb.description
+    });
+    setIsNewKnowledgeBase(false);
+    setShowKnowledgeBaseModal(true);
+  };
+
+  const handleKnowledgeBaseFormChange = (e) => {
+    const { name, value } = e.target;
+    setKnowledgeBaseForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleKnowledgeBaseSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!knowledgeBaseForm.name.trim()) {
+      // Validation failed
+      return;
+    }
+    
+    try {
+      if (isNewKnowledgeBase) {
+        // Create new knowledge base
+        // In a real app, this would call the API
+        const newKB = {
+          id: `kb_${knowledgeBaseForm.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`,
+          name: knowledgeBaseForm.name,
+          description: knowledgeBaseForm.description,
+          ownerId: teacher.id,
+          documentCount: 0,
+          createdAt: new Date().toISOString()
+        };
+        
+        // Update state
+        setKnowledgeBases(prev => [...prev, newKB]);
+        setCurrentKnowledgeBase(newKB);
+      } else {
+        // Update existing knowledge base
+        // In a real app, this would call the API
+        const updatedKB = {
+          ...knowledgeBases.find(kb => kb.id === knowledgeBaseForm.id),
+          name: knowledgeBaseForm.name,
+          description: knowledgeBaseForm.description
+        };
+        
+        // Update state
+        setKnowledgeBases(prev => 
+          prev.map(kb => kb.id === updatedKB.id ? updatedKB : kb)
+        );
+        
+        if (currentKnowledgeBase.id === updatedKB.id) {
+          setCurrentKnowledgeBase(updatedKB);
+        }
+      }
+      
+      // Close modal
+      setShowKnowledgeBaseModal(false);
+    } catch (error) {
+      console.error('Error saving knowledge base:', error);
+    }
+  };
+
+  const handleDeleteKnowledgeBase = (kbId) => {
+    // In a real app, this would call the API
+    
+    // Only allow deletion if teacher has more than one knowledge base
+    if (knowledgeBases.length <= 1) {
+      alert('You need at least one knowledge base.');
+      return;
+    }
+    
+    // Update state
+    const newKBList = knowledgeBases.filter(kb => kb.id !== kbId);
+    setKnowledgeBases(newKBList);
+    
+    // If the current KB was deleted, select the first one
+    if (currentKnowledgeBase.id === kbId) {
+      setCurrentKnowledgeBase(newKBList[0]);
+      fetchKnowledgeBaseArticles(newKBList[0].id);
+    }
+  };
+
   if (isLoading && !articles.length) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -238,13 +342,15 @@ export default function TeacherKnowledgeBase() {
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Knowledge Base Management</h1>
-        <div className="mt-4 md:mt-0">
-          <Link 
-            href="/teacher/knowledge-base/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+        <div className="mt-4 md:mt-0 flex space-x-3">
+          {/* New button for creating a knowledge base */}
+          <button
+            onClick={openNewKnowledgeBaseModal}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
           >
-            Add New Article
-          </Link>
+            New Knowledge Base
+          </button>
+      
         </div>
       </div>
       
@@ -258,13 +364,33 @@ export default function TeacherKnowledgeBase() {
               <select
                 id="knowledge-base"
                 className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                value={currentKnowledgeBase.id}
+                value={currentKnowledgeBase?.id || ''}
                 onChange={(e) => handleKnowledgeBaseChange(e.target.value)}
               >
                 {knowledgeBases.map(kb => (
                   <option key={kb.id} value={kb.id}>{kb.name}</option>
                 ))}
               </select>
+              
+              {/* Edit knowledge base button */}
+              <button
+                onClick={() => openEditKnowledgeBaseModal(currentKnowledgeBase)}
+                className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                title="Edit knowledge base"
+              >
+                <PencilIcon className="h-4 w-4" />
+              </button>
+              
+              {/* Delete knowledge base button */}
+              {knowledgeBases.length > 1 && (
+                <button
+                  onClick={() => handleDeleteKnowledgeBase(currentKnowledgeBase.id)}
+                  className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-red-500 hover:text-red-700 hover:bg-red-50"
+                  title="Delete knowledge base"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              )}
             </div>
             
             <form onSubmit={handleSearch} className="mt-4 sm:mt-0 flex">
@@ -284,6 +410,13 @@ export default function TeacherKnowledgeBase() {
               </button>
             </form>
           </div>
+          
+          {/* Knowledge base description */}
+          {currentKnowledgeBase?.description && (
+            <div className="mt-2 text-sm text-gray-500">
+              {currentKnowledgeBase.description}
+            </div>
+          )}
           
           <div className="mt-6">
             <div className="border-b border-gray-200">
@@ -342,26 +475,13 @@ export default function TeacherKnowledgeBase() {
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {article.category}
                               </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {article.views}
-                              </td>
+                            
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {new Date(article.createdAt).toLocaleDateString()}
                               </td>
                               <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div className="flex justify-end space-x-2">
-                                  <Link
-                                    href={`/teacher/knowledge-base/${article.id}`}
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                  >
-                                    View
-                                  </Link>
-                                  <Link
-                                    href={`/teacher/knowledge-base/${article.id}/edit`}
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                  >
-                                    Edit
-                                  </Link>
+                                  
                                   <button
                                     onClick={() => handleDeleteArticle(article.id)}
                                     className="text-red-600 hover:text-red-900"
@@ -440,8 +560,8 @@ export default function TeacherKnowledgeBase() {
         </div>
       </div>
       
-         {/* Bland AI Integration Info */}
-         <div className="mt-6 bg-indigo-50 rounded-lg p-4">
+      {/* Bland AI Integration Info */}
+      <div className="mt-6 bg-indigo-50 rounded-lg p-4">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
             <InformationCircleIcon className="h-6 w-6 text-indigo-400" />
@@ -467,6 +587,62 @@ export default function TeacherKnowledgeBase() {
           </div>
         </div>
       </div>
+
+      {/* Knowledge Base Modal */}
+      {showKnowledgeBaseModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-lg font-medium mb-4">
+              {isNewKnowledgeBase ? 'Create New Knowledge Base' : 'Edit Knowledge Base'}
+            </h2>
+            
+            <form onSubmit={handleKnowledgeBaseSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={knowledgeBaseForm.name}
+                    onChange={handleKnowledgeBaseFormChange}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={knowledgeBaseForm.description}
+                    onChange={handleKnowledgeBaseFormChange}
+                    rows={3}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-5 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowKnowledgeBaseModal(false)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isNewKnowledgeBase ? 'Create' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -484,6 +660,22 @@ function PlusIcon({ className }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+  );
+}
+
+function PencilIcon({ className }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>
+  );
+}
+
+function TrashIcon({ className }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
     </svg>
   );
 }

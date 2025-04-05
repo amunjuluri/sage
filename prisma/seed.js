@@ -21,6 +21,30 @@ async function main() {
   // Create teachers
   const hashedPassword = await bcrypt.hash('teacher123', 10);
   
+  // Create knowledge base IDs for teachers
+  const knowledgeBases = [
+    {
+      id: 'kb_cs_programming',
+      name: 'Programming Fundamentals',
+      description: 'Basic concepts and principles of programming'
+    },
+    {
+      id: 'kb_math_calculus',
+      name: 'Calculus and Analysis',
+      description: 'Fundamental concepts in calculus and mathematical analysis'
+    },
+    {
+      id: 'kb_cs_ai',
+      name: 'Artificial Intelligence',
+      description: 'Core principles and applications of AI and machine learning'
+    },
+    {
+      id: 'kb_general',
+      name: 'University General Knowledge',
+      description: 'Common information about university policies and procedures'
+    }
+  ];
+  
   const teacherUsers = [
     {
       email: 'professor1@university.edu',
@@ -33,7 +57,7 @@ async function main() {
           department: 'Computer Science',
           expertise: ['Programming', 'Data Structures', 'Algorithms'],
           voiceId: 'bland_male_1',
-          knowledgeBaseId: 'kb_cs_programming'
+          knowledgeBaseId: knowledgeBases[0].id // Programming KB
         }
       }
     },
@@ -48,7 +72,7 @@ async function main() {
           department: 'Mathematics',
           expertise: ['Calculus', 'Linear Algebra', 'Statistics'],
           voiceId: 'bland_female_1',
-          knowledgeBaseId: 'kb_math_calculus'
+          knowledgeBaseId: knowledgeBases[1].id // Calculus KB
         }
       }
     },
@@ -63,7 +87,7 @@ async function main() {
           department: 'Computer Science',
           expertise: ['Artificial Intelligence', 'Machine Learning'],
           voiceId: 'bland_male_2',
-          knowledgeBaseId: 'kb_cs_ai'
+          knowledgeBaseId: knowledgeBases[2].id // AI KB
         }
       }
     }
@@ -73,7 +97,7 @@ async function main() {
     teacherUsers.map(teacher => prisma.user.create({ data: teacher, include: { teacher: true } }))
   );
   
-  console.log('Created teachers');
+  console.log('Created teachers with knowledge bases');
   
   // Create students
   const studentPassword = await bcrypt.hash('password123', 10);
@@ -150,7 +174,7 @@ async function main() {
   
   console.log('Assigned teachers to students');
   
-  // Create knowledge base articles
+  // Create knowledge base articles mapped to knowledge bases
   const knowledgeArticles = [
     {
       title: 'Course Registration Process',
@@ -172,6 +196,20 @@ async function main() {
       category: 'Mathematics',
       teacherId: teachers[1].teacher.id,
       tags: ['vectors', 'matrices', 'linear systems']
+    },
+    {
+      title: 'Neural Networks Basics',
+      content: 'Neural networks are computing systems inspired by the biological neural networks that constitute animal brains. The neural network itself is not an algorithm, but rather a framework for many different machine learning algorithms to work together...',
+      category: 'Computer Science',
+      teacherId: teachers[2].teacher.id,
+      tags: ['ai', 'machine learning', 'neural networks']
+    },
+    {
+      title: 'Object-Oriented Programming Principles',
+      content: 'Object-oriented programming (OOP) is a programming paradigm based on the concept of "objects", which can contain data and code: data in the form of fields (often known as attributes or properties), and code, in the form of procedures (often known as methods)...',
+      category: 'Computer Science',
+      teacherId: teachers[0].teacher.id,
+      tags: ['programming', 'oop', 'classes']
     }
   ];
   

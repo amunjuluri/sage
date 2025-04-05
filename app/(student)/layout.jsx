@@ -27,18 +27,23 @@ export default function StudentLayout({ children }) {
 
   const navigation = [
     { name: 'Dashboard', href: '/student/dashboard', icon: HomeIcon },
-  
     { name: 'Request Callback', href: '/student/request-callback', icon: PhoneIcon },
     { name: 'Study Assistant', href: '/student/study-assistant', icon: BookIcon },
     { name: 'Knowledge Base', href: '/student/knowledge-base', icon: FolderIcon },
+    { name: 'Logout', href: '#', icon: LogoutIcon, isLogout: true }, // Added logout item
   ];
 
   if (status === 'loading') {
     return <div className="min-h-screen flex justify-center items-center">Loading...</div>;
   }
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+  
   if (status === 'unauthenticated') {
-    router.push('/login');
     return null;
   }
 
@@ -67,7 +72,11 @@ export default function StudentLayout({ children }) {
             <XIcon />
           </button>
         </div>
-        <SidebarContent navigation={navigation} pathname={pathname} />
+        <SidebarContent 
+          navigation={navigation} 
+          pathname={pathname} 
+          handleLogout={handleLogout} // Pass the logout handler
+        />
       </div>
 
       {/* Static sidebar for desktop */}
@@ -76,7 +85,11 @@ export default function StudentLayout({ children }) {
           <div className="h-16 flex items-center px-4 border-b">
             <span className="text-lg font-bold">Student Portal</span>
           </div>
-          <SidebarContent navigation={navigation} pathname={pathname} />
+          <SidebarContent 
+            navigation={navigation} 
+            pathname={pathname} 
+            handleLogout={handleLogout} // Pass the logout handler
+          />
         </div>
       </div>
 
@@ -133,7 +146,7 @@ export default function StudentLayout({ children }) {
   );
 }
 
-function SidebarContent({ navigation, pathname }) {
+function SidebarContent({ navigation, pathname, handleLogout }) {
   return (
     <nav className="flex-1 overflow-y-auto">
       <ul className="space-y-1 py-4">
@@ -142,6 +155,23 @@ function SidebarContent({ navigation, pathname }) {
                          (item.href !== '/student/dashboard' && pathname.startsWith(item.href));
           const Icon = item.icon;
           
+          // Check if this is the logout item
+          if (item.isLogout) {
+            return (
+              <li key={item.name}>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md w-full
+                    text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <Icon className="mr-3 h-5 w-5 text-gray-400" />
+                  {item.name}
+                </button>
+              </li>
+            );
+          }
+          
+          // Regular navigation item
           return (
             <li key={item.name}>
               <Link 
@@ -164,6 +194,7 @@ function SidebarContent({ navigation, pathname }) {
     </nav>
   );
 }
+
 // Icons
 function HomeIcon({ className }) {
   return (
@@ -201,6 +232,14 @@ function FolderIcon({ className }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  );
+}
+
+function LogoutIcon({ className }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
     </svg>
   );
 }

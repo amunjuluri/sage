@@ -29,9 +29,6 @@ export default function TeacherLayout({ children }) {
     { name: 'Dashboard', href: '/teacher/dashboard', icon: HomeIcon },
     { name: 'Callback Requests', href: '/teacher/callback-requests', icon: PhoneIcon },
     { name: 'Knowledge Base', href: '/teacher/knowledge-base', icon: DatabaseIcon },
-    { name: 'My Schedule', href: '/teacher/schedule', icon: CalendarIcon },
-    { name: 'Student Insights', href: '/teacher/insights', icon: ChartBarIcon },
-    { name: 'Settings', href: '/teacher/settings', icon: SettingsIcon },
   ];
 
   if (status === 'loading') {
