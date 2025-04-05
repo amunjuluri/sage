@@ -158,168 +158,147 @@ export default function RequestCallback() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Update this section in your RequestCallback component's handleSubmit function
+
+// Update the handleSubmit function to remove the demo/development mode fallback
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
+  
+  setIsSaving(true);
+  
+  try {
+    // Format phone number for Indian format (add +91 if not present)
+    let phoneNumber = formData.phoneNumber.replace(/\D/g, '');
+    if (!phoneNumber.startsWith('91') && phoneNumber.length === 10) {
+      phoneNumber = `+91${phoneNumber}`;
+    } else if (!phoneNumber.startsWith('+')) {
+      phoneNumber = `+${phoneNumber}`;
+    }
     
-    if (!validateForm()) return;
+    // Get teacher info for Bland AI call context
+    const teacher = assignedTeachers.find(t => t.id === formData.teacherId);
+    const teacherName = teacher ? (teacher.user?.name || teacher.name) : 'Your Professor';
+    const teacherDept = teacher ? teacher.department : 'University';
     
-    setIsSaving(true);
+    // First, create the callback request in our database
+    const response = await fetch('/api/callback-requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        teacherId: formData.teacherId,
+        subject: formData.subject,
+        message: formData.message,
+        requestedDate: new Date().toISOString(), // Immediate - use current time
+        immediateCall: true,
+        phoneNumber: phoneNumber,
+        status: 'SCHEDULED' // Already scheduling the call
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create callback request');
+    }
     
-    try {
-      // Format phone number for Indian format (add +91 if not present)
-      let phoneNumber = formData.phoneNumber.replace(/\D/g, '');
-      if (!phoneNumber.startsWith('91') && phoneNumber.length === 10) {
-        phoneNumber = `+91${phoneNumber}`;
-      } else if (!phoneNumber.startsWith('+')) {
-        phoneNumber = `+${phoneNumber}`;
-      }
-      
-      // Get teacher info for Bland AI call context
-      const teacher = assignedTeachers.find(t => t.id === formData.teacherId);
-      const teacherName = teacher ? (teacher.user?.name || teacher.name) : 'Your Professor';
-      const teacherDept = teacher ? teacher.department : 'University';
-      
-      // First, create the callback request in our database
-      const response = await fetch('/api/callback-requests', {
+    const data = await response.json();
+    
+    // Get the teacher's knowledge base ID
+    // This could either be fetched directly or included when fetching teacher information
+    const teacherKnowledgeBaseResponse = await fetch(`/api/teachers/${formData.teacherId}/knowledge-base`);
+    
+    if (!teacherKnowledgeBaseResponse.ok) {
+      throw new Error('Failed to fetch knowledge base information');
+    }
+    
+    const teacherKnowledgeBase = await teacherKnowledgeBaseResponse.json();
+    const knowledgeBaseId = teacherKnowledgeBase.id;
+    
+    // Immediately initiate Bland AI call with knowledge base integration
+    const blandResponse = await fetch('/api/bland-ai/calls', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phone_number: phoneNumber, // The formatted phone number
+        task: `You are an AI assistant for ${teacherName} from the ${teacherDept} department. 
+              A student has requested help with: "${formData.subject}".
+              The student's message is: "${formData.message}".
+              Introduce yourself as ${teacherName}'s AI assistant, acknowledge their request,
+              and help answer their questions about ${formData.subject}. 
+              If their questions are too complex or require personal attention from the professor,
+              let them know that ${teacherName} will be notified about this conversation 
+              and will follow up with them personally if needed.
+              Be friendly, helpful, and professional throughout the call.`,
+        wait_for_greeting: false, // Changed to false to start immediately
+        first_sentence: `Hello, this is an AI assistant calling on behalf of ${teacherName} from ${teacherDept} regarding your request about ${formData.subject}.`,
+        language: "en-US",
+        reduce_latency: true,
+        record: true,
+        max_duration: 20, // 20 minute max call duration
+        // Add knowledge base integration
+        knowledge_base: {
+          id: knowledgeBaseId,
+          query: formData.subject + " " + formData.message,
+          similarity_threshold: 0.7,
+          top_k: 5 // Number of relevant documents to retrieve
+        }
+      }),
+    });
+    
+    if (!blandResponse.ok) {
+      const blandError = await blandResponse.json();
+      throw new Error(blandError.error || 'Failed to initiate call');
+    }
+    
+    const blandData = await blandResponse.json();
+    
+    // Update the callback request with Bland AI call ID if available
+    if (blandData && blandData.id) {
+      await fetch(`/api/callback-requests/${data.request.id}/update-call`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          teacherId: formData.teacherId,
-          subject: formData.subject,
-          message: formData.message,
-          requestedDate: new Date().toISOString(), // Immediate - use current time
-          immediateCall: true,
-          phoneNumber: phoneNumber,
-          status: 'SCHEDULED' // Already scheduling the call
+          callId: blandData.id
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create callback request');
-      }
-      
-      const data = await response.json();
-      
-      // Immediate Bland AI call integration
-      try {
-        // Now initiate Bland AI call
-        const blandResponse = await fetch('/api/bland-ai/calls', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            phone_number: phoneNumber, // The formatted phone number
-            task: `You are an AI assistant for ${teacherName} from the ${teacherDept} department. 
-                  A student has requested help with: "${formData.subject}".
-                  The student's message is: "${formData.message}".
-                  Introduce yourself as ${teacherName}'s AI assistant, acknowledge their request,
-                  and help answer their questions about ${formData.subject}. 
-                  If their questions are too complex or require personal attention from the professor,
-                  let them know that ${teacherName} will be notified about this conversation 
-                  and will follow up with them personally if needed.
-                  Be friendly, helpful, and professional throughout the call.`,
-            wait_for_greeting: true,
-            first_sentence: `Hello, this is an AI assistant calling on behalf of ${teacherName} from ${teacherDept} regarding your request about ${formData.subject}.`,
-            language: "en-US",
-            reduce_latency: true,
-            record: true,
-            max_duration: 20 // 20 minute max call duration
-          }),
-        });
-        
-        const blandData = await blandResponse.json();
-        
-        // Update the callback request with Bland AI call ID if available
-        if (blandData && blandData.id) {
-          await fetch(`/api/callback-requests/${data.request.id}/update-call`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              callId: blandData.id
-            }),
-          });
-        }
-      } catch (blandError) {
-        console.error('Bland AI call error:', blandError);
-        // We still continue since the request was created successfully
-      }
-      
-      // Add the new request to the list
-      setCallbackRequests(prev => [data.request, ...prev]);
-      
-      // Show success message
-      setSubmitStatus({
-        type: 'success',
-        message: 'Your callback request has been submitted and you will receive a call immediately!'
-      });
-      
-      // Reset form but keep phone number and teacher
-      setFormData({
-        teacherId: formData.teacherId,
-        subject: '',
-        message: '',
-        requestedDate: formatDateForInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
-        immediateCall: true,
-        phoneNumber: formData.phoneNumber
-      });
-    } catch (error) {
-      console.error('Error submitting callback request:', error);
-      
-      // For development: Simulate successful request if API fails
-      if (process.env.NODE_ENV === 'development') {
-        // Format phone number for display
-        let phoneNumber = formData.phoneNumber.replace(/\D/g, '');
-        if (!phoneNumber.startsWith('91') && phoneNumber.length === 10) {
-          phoneNumber = `+91${phoneNumber}`;
-        } else if (!phoneNumber.startsWith('+')) {
-          phoneNumber = `+${phoneNumber}`;
-        }
-        
-        const mockRequest = {
-          id: `demo-cr-${Date.now()}`,
-          studentId: session?.user?.studentId || 'demo-student',
-          teacherId: formData.teacherId,
-          subject: formData.subject,
-          message: formData.message,
-          requestedDate: new Date().toISOString(),
-          status: 'SCHEDULED',
-          phoneNumber: phoneNumber,
-          createdAt: new Date().toISOString()
-        };
-        
-        // Add the mock request to the list
-        setCallbackRequests(prev => [mockRequest, ...prev]);
-        
-        setSubmitStatus({
-          type: 'success',
-          message: 'Demo mode: Callback scheduled! In production, you would receive an immediate call via Bland AI.'
-        });
-        
-        // Reset form but keep phone number and teacher
-        setFormData({
-          teacherId: formData.teacherId,
-          subject: '',
-          message: '',
-          requestedDate: formatDateForInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
-          immediateCall: true,
-          phoneNumber: formData.phoneNumber
-        });
-      } else {
-        setSubmitStatus({
-          type: 'error',
-          message: error.message || 'There was an error submitting your request. Please try again.'
-        });
-      }
-    } finally {
-      setIsSaving(false);
     }
-  };
+    
+    // Add the new request to the list
+    setCallbackRequests(prev => [data.request, ...prev]);
+    
+    // Show success message
+    setSubmitStatus({
+      type: 'success',
+      message: 'Your callback request has been submitted and you will receive a call immediately!'
+    });
+    
+    // Reset form but keep phone number and teacher
+    setFormData({
+      teacherId: formData.teacherId,
+      subject: '',
+      message: '',
+      requestedDate: formatDateForInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
+      immediateCall: true,
+      phoneNumber: formData.phoneNumber
+    });
+  } catch (error) {
+    console.error('Error submitting callback request:', error);
+    setSubmitStatus({
+      type: 'error',
+      message: error.message || 'There was an error submitting your request. Please try again.'
+    });
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   if (status === 'loading' || isLoading) {
     return (
