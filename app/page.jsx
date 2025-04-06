@@ -24,7 +24,7 @@ export default function Home() {
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-            Student Assistance & Guidance Research
+            SAGE: Student Assistance & Guidance System
           </h1>
           <div className="space-x-4">
             <Link href="/student-login" className="px-4 py-2 rounded-full text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors duration-200">
@@ -243,62 +243,7 @@ export default function Home() {
       </section>
 
       {/* Enhanced Footer */}
-      <footer className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="text-lg font-bold mb-4">Platform</h4>
-              <ul className="space-y-2">
-                <FooterLink href="/features">Features</FooterLink>
-                <FooterLink href="/methodology">Methodology</FooterLink>
-                <FooterLink href="/faq">FAQ</FooterLink>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-bold mb-4">Team</h4>
-              <ul className="space-y-2">
-                <FooterLink href="/about">About Us</FooterLink>
-                <FooterLink href="/teachers">Teachers</FooterLink>
-                <FooterLink href="/contact">Contact</FooterLink>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-bold mb-4">Resources</h4>
-              <ul className="space-y-2">
-                <FooterLink href="/blog">Research Blog</FooterLink>
-                <FooterLink href="/papers">Papers</FooterLink>
-                <FooterLink href="/datasets">Datasets</FooterLink>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-bold mb-4">Legal</h4>
-              <ul className="space-y-2">
-                <FooterLink href="/privacy">Privacy Policy</FooterLink>
-                <FooterLink href="/terms">Terms of Use</FooterLink>
-                <FooterLink href="/ethics">Ethics Framework</FooterLink>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">
-              &copy; {new Date().getFullYear()} Student Assistance & Guidance Research. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <SocialIcon href="#" aria="Research Repository">
-                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-              </SocialIcon>
-              <SocialIcon href="#" aria="Research Updates">
-                <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-              </SocialIcon>
-              <SocialIcon href="#" aria="Research Network">
-                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                <rect x="2" y="9" width="4" height="12"></rect>
-                <circle cx="4" cy="4" r="2"></circle>
-              </SocialIcon>
-            </div>
-          </div>
-        </div>
-      </footer>
+     
     </div>
   );
 }

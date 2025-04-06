@@ -207,16 +207,8 @@ const handleSubmit = async (e) => {
     
     const data = await response.json();
     
-    // Get the teacher's knowledge base ID
-    // This could either be fetched directly or included when fetching teacher information
-    const teacherKnowledgeBaseResponse = await fetch(`/api/teachers/${formData.teacherId}/knowledge-base`);
-    
-    if (!teacherKnowledgeBaseResponse.ok) {
-      throw new Error('Failed to fetch knowledge base information');
-    }
-    
-    const teacherKnowledgeBase = await teacherKnowledgeBaseResponse.json();
-    const knowledgeBaseId = teacherKnowledgeBase.id;
+    // Use the specific knowledge article ID provided
+    const knowledgeBaseId = "cm93hqwfr000mr0whm5rgjhxc";
     
     // Immediately initiate Bland AI call with knowledge base integration
     const blandResponse = await fetch('/api/bland-ai/calls', {
@@ -252,23 +244,29 @@ const handleSubmit = async (e) => {
     });
     
     if (!blandResponse.ok) {
-      const blandError = await blandResponse.json();
-      throw new Error(blandError.error || 'Failed to initiate call');
-    }
-    
-    const blandData = await blandResponse.json();
-    
-    // Update the callback request with Bland AI call ID if available
-    if (blandData && blandData.id) {
-      await fetch(`/api/callback-requests/${data.request.id}/update-call`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          callId: blandData.id
-        }),
-      });
+      console.error('Failed to initiate call with Bland AI');
+      // Don't throw an error here, just log it and continue
+      // We already created the callback request, so we want to return success
+    } else {
+      const blandData = await blandResponse.json();
+      
+      // Update the callback request with Bland AI call ID if available
+      if (blandData && blandData.id) {
+        try {
+          await fetch(`/api/callback-requests/${data.request.id}/update-call`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              callId: blandData.id
+            }),
+          });
+        } catch (updateError) {
+          // Log error but don't fail the whole operation
+          console.error('Error updating call ID:', updateError);
+        }
+      }
     }
     
     // Add the new request to the list
