@@ -14,8 +14,10 @@ export default function StudentLayout({ children }) {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    // If session is loaded and user is not a student, redirect
-    if (status === 'authenticated' && session.user.role !== 'STUDENT') {
+    // Handle authentication and role checking
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    } else if (status === 'authenticated' && session.user.role !== 'STUDENT') {
       router.push('/login');
     }
   }, [session, status, router]);
@@ -36,12 +38,6 @@ export default function StudentLayout({ children }) {
   if (status === 'loading') {
     return <div className="min-h-screen flex justify-center items-center">Loading...</div>;
   }
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
   
   if (status === 'unauthenticated') {
     return null;

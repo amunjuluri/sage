@@ -14,31 +14,9 @@ export default function StudyAssistant() {
       setStudent(JSON.parse(storedStudent));
     }
     
-    // Mock recent study items
+    // Initialize empty recent items
     // In a real app, these would come from a database
-    setRecentItems([
-      {
-        id: 'f1',
-        type: 'flashcards',
-        title: 'Data Structures Concepts',
-        createdAt: '2025-02-25T14:30:00',
-        count: 24
-      },
-      {
-        id: 's1',
-        type: 'summary',
-        title: 'Introduction to Algorithms - Chapter 3',
-        createdAt: '2025-02-24T10:15:00',
-        wordCount: 850
-      },
-      {
-        id: 'q1',
-        type: 'quiz',
-        title: 'Linear Algebra Fundamentals',
-        createdAt: '2025-02-22T16:45:00',
-        questionCount: 10
-      }
-    ]);
+    setRecentItems([]);
   }, []);
 
   if (!student) {
@@ -52,25 +30,25 @@ export default function StudyAssistant() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StudyCard
           title="Flashcards"
-          description="Generate interactive flashcards to help you memorize key concepts and definitions."
+          description="Interactive flashcards to help you memorize key concepts and definitions."
           icon={<DocumentTextIcon />}
-          linkText="Create Flashcards"
+          linkText="View Flashcards"
           linkHref="/student/study-assistant/flashcards"
           bgColor="bg-purple-600"
         />
         <StudyCard
           title="Summaries"
-          description="Get AI-generated summaries of your course materials, textbooks, or lecture notes."
+          description="Study summaries of your course materials, textbooks, or lecture notes."
           icon={<DocumentIcon />}
-          linkText="Create Summary"
+          linkText="View Summaries"
           linkHref="/student/study-assistant/summaries"
           bgColor="bg-indigo-600"
         />
         <StudyCard
           title="Quizzes"
-          description="Generate practice quizzes to test your knowledge and reinforce your learning."
+          description="Practice quizzes to test your knowledge and reinforce your learning."
           icon={<ClipboardCheckIcon />}
-          linkText="Create Quiz"
+          linkText="View Quizzes"
           linkHref="/student/study-assistant/quizzes"
           bgColor="bg-blue-600"
         />

@@ -11,13 +11,7 @@ const StudyAssistant = () => {
   const [activeFlashcard, setActiveFlashcard] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [currentQuizQuestion, setCurrentQuizQuestion] = useState(0);
-  
-  // Sample data - would come from your database in a real app
-  const courses = [
-    { id: 1, name: "Computer Science", progress: 68, color: "bg-blue-500" },
-    { id: 2, name: "Mathematics", progress: 42, color: "bg-emerald-500" },
-    { id: 3, name: "Physics", progress: 85, color: "bg-purple-500" }
-  ];
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
   
   const flashcards = [
     { id: 1, question: "What is Big O Notation?", answer: "Big O notation is used to describe the performance or complexity of an algorithm, specifically the worst-case scenario." },
@@ -87,6 +81,8 @@ const StudyAssistant = () => {
   const handleNextQuestion = () => {
     if (currentQuizQuestion < quizQuestions.length - 1) {
       setCurrentQuizQuestion(currentQuizQuestion + 1);
+    } else if (currentQuizQuestion === quizQuestions.length - 1) {
+      setQuizSubmitted(true);
     }
   };
   
@@ -95,6 +91,26 @@ const StudyAssistant = () => {
       setCurrentQuizQuestion(currentQuizQuestion - 1);
     }
   };
+  
+  const resetQuiz = () => {
+    setSelectedOptions({});
+    setCurrentQuizQuestion(0);
+    setQuizSubmitted(false);
+  };
+  
+  const getQuizResults = () => {
+    let correct = 0;
+    quizQuestions.forEach(question => {
+      if (selectedOptions[question.id] === question.correctAnswer) {
+        correct++;
+      }
+    });
+    return {
+      correct,
+      total: quizQuestions.length,
+      percentage: Math.round((correct / quizQuestions.length) * 100)
+    };
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -102,79 +118,6 @@ const StudyAssistant = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Assistant</h1>
         <p className="text-gray-600">Your personalized learning companion</p>
       </header>
-      
-      {/* Recent Activity and Stats Section */}
-      <div className="mb-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Study Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <h3 className="text-2xl font-bold">42.5</h3>
-                <p className="ml-1 text-gray-500">hours</p>
-              </div>
-              <div className="flex items-center mt-1 text-green-600 text-sm">
-                <span>↑ 8% from last week</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Flashcards Mastered</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <h3 className="text-2xl font-bold">147</h3>
-                <p className="ml-1 text-gray-500">cards</p>
-              </div>
-              <div className="flex items-center mt-1 text-green-600 text-sm">
-                <span>↑ 12 cards this week</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Quiz Accuracy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <h3 className="text-2xl font-bold">78.3%</h3>
-              </div>
-              <div className="flex items-center mt-1 text-amber-600 text-sm">
-                <span>↓ 2.1% from last attempt</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {courses.map(course => (
-            <Card key={course.id} className="overflow-hidden border-t-4" style={{ borderTopColor: course.color.replace('bg-', '').includes('blue') ? '#3b82f6' : course.color.includes('emerald') ? '#10b981' : '#a855f7' }}>
-              <CardHeader className="pb-3">
-                <CardTitle>{course.name}</CardTitle>
-                <CardDescription>
-                  <div className="flex justify-between items-center">
-                    <span>Overall progress</span>
-                    <span className="font-medium">{course.progress}%</span>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pb-1">
-                <Progress value={course.progress} className="h-2" />
-              </CardContent>
-              <CardFooter>
-                <Button variant="ghost" size="sm" className="w-full justify-between">
-                  Continue Learning <ArrowRight size={16} />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </div>
       
       {/* Main Study Tools Tabs Section */}
       <Tabs defaultValue="flashcards" className="w-full">
@@ -236,82 +179,7 @@ const StudyAssistant = () => {
                 </Button>
               </div>
             </div>
-            
-            <div className="flex justify-between items-center mb-8">
-              <Button variant="secondary" size="sm">
-                <PlusCircle size={16} className="mr-2" /> Create New Card
-              </Button>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  Mark as Difficult
-                </Button>
-                <Button variant="default" size="sm">
-                  Mark as Mastered
-                </Button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Your Performance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Mastered</span>
-                      <span className="text-sm font-medium">68%</span>
-                    </div>
-                    <Progress value={68} className="h-2" />
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Learning</span>
-                      <span className="text-sm font-medium">24%</span>
-                    </div>
-                    <Progress value={24} className="h-2" />
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Difficult</span>
-                      <span className="text-sm font-medium">8%</span>
-                    </div>
-                    <Progress value={8} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Study Schedule</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Clock size={18} className="text-gray-500 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Next Review</p>
-                        <p className="text-sm text-gray-600">Tomorrow, 10:00 AM</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <BookOpen size={18} className="text-gray-500 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Cards Due</p>
-                        <p className="text-sm text-gray-600">24 cards to review</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <Award size={18} className="text-gray-500 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Current Streak</p>
-                        <p className="text-sm text-gray-600">7 days</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+           
           </div>
         </TabsContent>
         
@@ -323,123 +191,76 @@ const StudyAssistant = () => {
           </div>
           
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-              <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
-                <Badge variant="outline" className="px-3 py-1">
-                  Question {currentQuizQuestion + 1} of {quizQuestions.length}
-                </Badge>
-                <Progress value={(currentQuizQuestion + 1) / quizQuestions.length * 100} className="h-2 w-32" />
-              </div>
-              
-              <div className="p-6">
-                <h3 className="text-lg font-medium mb-4">{quizQuestions[currentQuizQuestion].question}</h3>
+            {!quizSubmitted ? (
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+                <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
+                  <Badge variant="outline" className="px-3 py-1">
+                    Question {currentQuizQuestion + 1} of {quizQuestions.length}
+                  </Badge>
+                  <Progress value={(currentQuizQuestion + 1) / quizQuestions.length * 100} className="h-2 w-32" />
+                </div>
                 
-                <div className="space-y-3">
-                  {quizQuestions[currentQuizQuestion].options.map((option, index) => (
-                    <div 
-                      key={index}
-                      onClick={() => handleOptionSelect(quizQuestions[currentQuizQuestion].id, index)}
-                      className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedOptions[quizQuestions[currentQuizQuestion].id] === index 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${
+                <div className="p-6">
+                  <h3 className="text-lg font-medium mb-4">{quizQuestions[currentQuizQuestion].question}</h3>
+                  
+                  <div className="space-y-3">
+                    {quizQuestions[currentQuizQuestion].options.map((option, index) => (
+                      <div 
+                        key={index}
+                        onClick={() => handleOptionSelect(quizQuestions[currentQuizQuestion].id, index)}
+                        className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
                           selectedOptions[quizQuestions[currentQuizQuestion].id] === index 
-                            ? 'bg-blue-500 text-white' 
-                            : 'border border-gray-300'
-                        }`}>
-                          {selectedOptions[quizQuestions[currentQuizQuestion].id] === index && (
-                            <CheckCircle2 size={14} />
-                          )}
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${
+                            selectedOptions[quizQuestions[currentQuizQuestion].id] === index 
+                              ? 'bg-blue-500 text-white' 
+                              : 'border border-gray-300'
+                          }`}>
+                            {selectedOptions[quizQuestions[currentQuizQuestion].id] === index && (
+                              <CheckCircle2 size={14} />
+                            )}
+                          </div>
+                          <span>{option}</span>
                         </div>
-                        <span>{option}</span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-gray-50 border-t flex justify-between">
+                  <Button 
+                    onClick={handlePrevQuestion} 
+                    variant="outline" 
+                    size="sm"
+                    disabled={currentQuizQuestion === 0}
+                  >
+                    <ChevronLeft size={16} className="mr-1" /> Previous
+                  </Button>
+                  
+                  <Button onClick={handleNextQuestion} variant={currentQuizQuestion === quizQuestions.length - 1 ? "default" : "outline"} size="sm">
+                    {currentQuizQuestion === quizQuestions.length - 1 ? "Submit Quiz" : "Next Question"}
+                    {currentQuizQuestion !== quizQuestions.length - 1 && <ChevronRight size={16} className="ml-1" />}
+                  </Button>
                 </div>
               </div>
-              
-              <div className="p-4 bg-gray-50 border-t flex justify-between">
-                <Button 
-                  onClick={handlePrevQuestion} 
-                  variant="outline" 
-                  size="sm"
-                  disabled={currentQuizQuestion === 0}
-                >
-                  <ChevronLeft size={16} className="mr-1" /> Previous
-                </Button>
-                
-                <Button onClick={handleNextQuestion} variant={currentQuizQuestion === quizQuestions.length - 1 ? "default" : "outline"} size="sm">
-                  {currentQuizQuestion === quizQuestions.length - 1 ? "Submit Quiz" : "Next Question"}
-                  {currentQuizQuestion !== quizQuestions.length - 1 && <ChevronRight size={16} className="ml-1" />}
-                </Button>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+                <div className="p-6 text-center">
+                  <h3 className="text-xl font-bold mb-4">Quiz Results</h3>
+                  
+                  <div className="bg-gray-50 rounded-lg p-8 mb-6">
+                    <div className="text-4xl font-bold mb-2 text-blue-600">{getQuizResults().percentage}%</div>
+                    <p className="text-gray-600">You got {getQuizResults().correct} out of {getQuizResults().total} questions correct</p>
+                  </div>
+                  
+                  <Button onClick={resetQuiz} variant="default">Try Again</Button>
+                </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Recent Quizzes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center pb-2 border-b">
-                      <div>
-                        <p className="text-sm font-medium">Data Structures Quiz</p>
-                        <p className="text-xs text-gray-500">Completed 2 days ago</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">92%</Badge>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pb-2 border-b">
-                      <div>
-                        <p className="text-sm font-medium">Calculus Midterm Prep</p>
-                        <p className="text-xs text-gray-500">Completed 5 days ago</p>
-                      </div>
-                      <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">74%</Badge>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium">Physics Concepts</p>
-                        <p className="text-xs text-gray-500">Completed 1 week ago</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">88%</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Recommended Quizzes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="rounded-lg border border-gray-200 p-3">
-                      <p className="text-sm font-medium mb-1">Algorithms & Complexity</p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>15 questions</span>
-                        <span>~20 min</span>
-                      </div>
-                      <Button size="sm" variant="link" className="px-0 py-1 h-auto">Start Quiz →</Button>
-                    </div>
-                    
-                    <div className="rounded-lg border border-gray-200 p-3">
-                      <p className="text-sm font-medium mb-1">Integration Techniques</p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>12 questions</span>
-                        <span>~15 min</span>
-                      </div>
-                      <Button size="sm" variant="link" className="px-0 py-1 h-auto">Start Quiz →</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            )}
           </div>
         </TabsContent>
         
@@ -458,61 +279,10 @@ const StudyAssistant = () => {
                   <CardDescription>{summary.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 line-clamp-4">{summary.content}</p>
+                  <p className="text-gray-700">{summary.content}</p>
                 </CardContent>
-                <CardFooter className="flex justify-between border-t pt-4">
-                  <Button variant="ghost" size="sm">
-                    <Library size={16} className="mr-2" /> Save to Library
-                  </Button>
-                  <Button variant="default" size="sm">
-                    <BookOpen size={16} className="mr-2" /> Read Full Summary
-                  </Button>
-                </CardFooter>
               </Card>
             ))}
-            
-            <Card className="border-dashed border-2 flex flex-col items-center justify-center p-6 h-full">
-              <PlusCircle size={32} className="text-gray-400 mb-2" />
-              <p className="text-gray-600 font-medium mb-1">Create New Summary</p>
-              <p className="text-gray-500 text-sm text-center mb-4">Upload your notes or generate AI summaries</p>
-              <Button variant="outline">Get Started</Button>
-            </Card>
-          </div>
-          
-          <div className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Study Insights</CardTitle>
-                <CardDescription>Based on your summaries and notes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart size={20} className="text-blue-500" />
-                      <h3 className="font-medium text-gray-800">Concept Connections</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">Data structures concepts connect strongly with algorithm efficiency topics.</p>
-                  </div>
-                  
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Brain size={20} className="text-purple-500" />
-                      <h3 className="font-medium text-gray-800">Knowledge Gaps</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">Consider reviewing advanced calculus integration techniques.</p>
-                  </div>
-                  
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap size={20} className="text-amber-500" />
-                      <h3 className="font-medium text-gray-800">Study Efficiency</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">Your retention is 28% higher when studying summaries before flashcards.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
       </Tabs>
