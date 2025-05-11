@@ -42,9 +42,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-block px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 text-sm font-medium">
-                University Research Initiative
-              </div>
+             
               <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
                 Exploring the future of <span className="text-indigo-600">academic support</span>
               </h2>
@@ -226,21 +224,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Participation CTA Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl font-bold text-gray-900">Join our research initiative</h3>
-          <p className="mt-4 text-xl text-gray-600">Help shape the future of educational technology by participating in our ongoing research.</p>
-          <div className="mt-8 flex justify-center space-x-4">
-            <Link href="/student-login" className="px-8 py-4 rounded-full text-base font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:shadow-md shadow-sm transition-all duration-300">
-              Sign Up Now
-            </Link>
-            <Link href="/learn-more" className="px-8 py-4 rounded-full text-base font-medium border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-all duration-300">
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </section>
+    
 
       {/* Enhanced Footer */}
      

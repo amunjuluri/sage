@@ -165,9 +165,12 @@ export default function KnowledgeBase() {
                       <span className="text-gray-500">
                         Added {new Date(article.createdAt).toLocaleDateString()}
                       </span>
-                      <button className="text-blue-600 hover:text-blue-800 font-medium">
+                      <a 
+                        href={`/student/knowledge-base/${article.id}`}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
                         Read more
-                      </button>
+                      </a>
                     </div>
                   </article>
                 </li>

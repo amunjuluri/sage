@@ -477,18 +477,26 @@ export default function TeacherKnowledgeBase() {
                           {articles.map((article) => (
                             <tr key={article.id}>
                               <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                {article.name}
+                                <a 
+                                  href={`/teacher/knowledge-base/${article.id}`}
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                >
+                                  {article.name}
+                                </a>
                               </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {article.category}
-                              </td>
-                            
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{article.category}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{article.views}</td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {new Date(article.createdAt).toLocaleDateString()}
                               </td>
-                              <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                              <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div className="flex justify-end space-x-2">
-                                  
+                                  <a
+                                    href={`/teacher/knowledge-base/${article.id}`}
+                                    className="text-indigo-600 hover:text-indigo-900"
+                                  >
+                                    View
+                                  </a>
                                   <button
                                     onClick={() => handleDeleteArticle(article.id)}
                                     className="text-red-600 hover:text-red-900"

@@ -178,38 +178,73 @@ async function main() {
   const knowledgeArticles = [
     {
       title: 'Course Registration Process',
-      content: 'The course registration process begins two weeks before the semester starts. Students must log into the portal and select courses based on their program requirements...',
+      content: 'The course registration process begins two weeks before the semester starts. Students must log into the portal and select courses based on their program requirements. Important deadlines to remember:\n\n- Pre-registration: 2 weeks before semester start\n- Drop/Add period: First 2 weeks of semester\n- Withdrawal deadline: Week 8 of semester\n\nTo register, visit the student portal at portal.university.edu and follow the steps outlined in your program guide. If you encounter any issues, contact the registrar\'s office at registrar@university.edu.',
       category: 'Administrative',
       teacherId: teachers[0].teacher.id,
       tags: ['registration', 'courses', 'portal']
     },
     {
       title: 'Understanding Big O Notation',
-      content: 'Big O notation is used to describe the performance or complexity of an algorithm. It describes the worst-case scenario and can be used to describe the execution time required or the space used...',
+      content: 'Big O notation is used to describe the performance or complexity of an algorithm. It describes the worst-case scenario and can be used to describe the execution time required or the space used by an algorithm.\n\nCommon complexities include:\n\n- O(1): Constant time\n- O(log n): Logarithmic time\n- O(n): Linear time\n- O(n log n): Log-linear time\n- O(n²): Quadratic time\n- O(2^n): Exponential time\n\nWhen analyzing algorithms, we focus on how the runtime or space requirements grow as the input size increases. For example, a linear search through an array takes O(n) time because it may need to check every element in the worst case.',
       category: 'Computer Science',
       teacherId: teachers[0].teacher.id,
       tags: ['algorithms', 'complexity', 'performance']
     },
     {
       title: 'Introduction to Linear Algebra',
-      content: 'Linear algebra is the branch of mathematics concerning linear equations, linear functions, and their representations through matrices and vector spaces...',
+      content: 'Linear algebra is the branch of mathematics concerning linear equations, linear functions, and their representations through matrices and vector spaces.\n\nKey concepts include:\n\n- Vectors and vector operations\n- Matrices and matrix operations\n- Linear transformations\n- Eigenvalues and eigenvectors\n- Vector spaces and subspaces\n\nApplications of linear algebra are widespread in science and engineering, including computer graphics, machine learning, quantum mechanics, and optimization problems.',
       category: 'Mathematics',
       teacherId: teachers[1].teacher.id,
       tags: ['vectors', 'matrices', 'linear systems']
     },
     {
       title: 'Neural Networks Basics',
-      content: 'Neural networks are computing systems inspired by the biological neural networks that constitute animal brains. The neural network itself is not an algorithm, but rather a framework for many different machine learning algorithms to work together...',
+      content: 'Neural networks are computing systems inspired by the biological neural networks that constitute animal brains. The neural network itself is not an algorithm, but rather a framework for many different machine learning algorithms to work together.\n\nKey components of neural networks include:\n\n- Neurons: Basic computational units\n- Layers: Input, hidden, and output layers\n- Weights and biases: Parameters that are adjusted during training\n- Activation functions: Functions that determine the output of a neuron\n- Loss functions: Measure how well the network performs\n\nNeural networks are at the core of deep learning, a subfield of machine learning that has achieved remarkable results in areas such as computer vision, natural language processing, and game playing.',
       category: 'Computer Science',
       teacherId: teachers[2].teacher.id,
       tags: ['ai', 'machine learning', 'neural networks']
     },
     {
       title: 'Object-Oriented Programming Principles',
-      content: 'Object-oriented programming (OOP) is a programming paradigm based on the concept of "objects", which can contain data and code: data in the form of fields (often known as attributes or properties), and code, in the form of procedures (often known as methods)...',
+      content: 'Object-oriented programming (OOP) is a programming paradigm based on the concept of "objects", which can contain data and code: data in the form of fields (often known as attributes or properties), and code, in the form of procedures (often known as methods).\n\nThe four main principles of OOP are:\n\n1. Encapsulation: Bundling data and methods that operate on that data\n2. Inheritance: Ability of a class to inherit properties and methods from another class\n3. Polymorphism: Ability to present the same interface for different underlying forms\n4. Abstraction: Hiding complex implementation details and showing only the necessary features\n\nThese principles help in creating modular, reusable, and maintainable code.',
       category: 'Computer Science',
       teacherId: teachers[0].teacher.id,
       tags: ['programming', 'oop', 'classes']
+    },
+    {
+      title: 'Calculus: Limits and Continuity',
+      content: 'Limits and continuity are fundamental concepts in calculus. A limit describes the behavior of a function as its input approaches a certain value.\n\nKey concepts include:\n\n- Definition of a limit\n- One-sided limits\n- Continuity at a point\n- Continuous functions\n- Properties of limits\n- Evaluating limits\n\nA function is continuous at a point if the limit exists at that point, equals the function value, and the function is defined at that point. Understanding continuity is essential for applying many calculus theorems.',
+      category: 'Mathematics',
+      teacherId: teachers[1].teacher.id,
+      tags: ['calculus', 'limits', 'functions']
+    },
+    {
+      title: 'Machine Learning Model Evaluation',
+      content: 'Evaluating machine learning models is crucial to ensure they generalize well to unseen data. Different metrics are appropriate for different types of problems.\n\nFor classification problems:\n- Accuracy: Proportion of correct predictions\n- Precision: Proportion of positive identifications that were actually correct\n- Recall: Proportion of actual positives that were identified correctly\n- F1 Score: Harmonic mean of precision and recall\n- ROC Curve and AUC: Graphical plot showing the diagnostic ability\n\nFor regression problems:\n- Mean Absolute Error (MAE)\n- Mean Squared Error (MSE)\n- Root Mean Squared Error (RMSE)\n- R-squared (coefficient of determination)\n\nThe choice of evaluation metric should align with the business or research objectives of the project.',
+      category: 'Computer Science',
+      teacherId: teachers[2].teacher.id,
+      tags: ['machine learning', 'evaluation', 'metrics']
+    },
+    {
+      title: 'Study Techniques for STEM Subjects',
+      content: 'STEM (Science, Technology, Engineering, and Mathematics) subjects often require specific study approaches.\n\nEffective study techniques include:\n\n1. Active Learning: Engage with the material through practice problems, not just reading\n2. Spaced Repetition: Study material over increasing intervals rather than cramming\n3. Concept Mapping: Create visual representations of how concepts relate to each other\n4. Peer Teaching: Explaining concepts to others reinforces your understanding\n5. Practice Testing: Regular self-quizzing on material\n6. Applied Learning: Connect theoretical concepts to real-world applications\n\nRemember that understanding fundamental principles is more important than memorizing procedures in STEM fields.',
+      category: 'General',
+      teacherId: teachers[0].teacher.id,
+      tags: ['study skills', 'learning', 'STEM']
+    },
+    {
+      title: 'Understanding Research Papers',
+      content: 'Academic research papers follow a specific structure that, once understood, makes them easier to comprehend and analyze.\n\nTypical sections include:\n\n1. Abstract: Summary of the paper\'s content\n2. Introduction: Context, motivation, and research questions\n3. Literature Review: Prior work in the field\n4. Methodology: How the research was conducted\n5. Results: What was found\n6. Discussion: Interpretation of results and implications\n7. Conclusion: Summary and future work\n\nWhen reading research papers, consider:\n- Reading the abstract and conclusion first for an overview\n- Identifying the key research questions and hypotheses\n- Evaluating the methodology for validity\n- Examining figures and tables closely\n- Noting limitations acknowledged by the authors\n\nDeveloping critical reading skills is essential for academic success.',
+      category: 'General',
+      teacherId: teachers[1].teacher.id,
+      tags: ['research', 'academic', 'papers']
+    },
+    {
+      title: 'Ethics in Artificial Intelligence',
+      content: 'As artificial intelligence systems become more powerful and widespread, ethical considerations become increasingly important.\n\nKey ethical issues in AI include:\n\n1. Bias and Fairness: AI systems may perpetuate or amplify existing biases\n2. Privacy: AI often requires large amounts of data, raising privacy concerns\n3. Transparency and Explainability: The "black box" nature of some AI systems\n4. Accountability: Who is responsible when AI makes mistakes?\n5. Autonomy: How much decision-making power should be given to AI?\n6. Employment Impact: How AI affects jobs and employment\n\nAddressing these ethical issues requires input from diverse stakeholders, including technologists, ethicists, policymakers, and the public.',
+      category: 'Computer Science',
+      teacherId: teachers[2].teacher.id,
+      tags: ['ai', 'ethics', 'technology']
     }
   ];
   
