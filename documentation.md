@@ -199,9 +199,7 @@ The application includes several API endpoints:
 - Authentication (`/api/auth/*`)
 - Student management (`/api/students/*`)
 - Teacher management (`/api/teachers/*`)
-- Chat functionality (`/api/chat/*`)
 - Callback request handling (`/api/callback-requests/*`)
-- Study assistance (`/api/study-assistance/*`)
 - Bland AI integration (`/api/bland-ai/*`) for voice calls
 
 ## Database Design
