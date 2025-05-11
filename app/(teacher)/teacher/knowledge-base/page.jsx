@@ -276,7 +276,7 @@ export default function TeacherKnowledgeBase() {
           id: `kb_${knowledgeBaseForm.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`,
           name: knowledgeBaseForm.name,
           description: knowledgeBaseForm.description,
-          ownerId: teacher.id,
+          ownerId: session.user.id,
           documentCount: 0,
           createdAt: new Date().toISOString()
         };
@@ -350,7 +350,14 @@ export default function TeacherKnowledgeBase() {
           >
             New Knowledge Base
           </button>
-      
+          {/* New Article button */}
+          <Link
+            href="/teacher/knowledge-base/new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            New Article
+          </Link>
         </div>
       </div>
       

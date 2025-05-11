@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { uploadDocumentToKnowledgeBase } from '@/lib/services/blandAIService';
 
 export default function NewKnowledgeBaseArticle() {
-  const [teacher, setTeacher] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [knowledgeBases, setKnowledgeBases] = useState([]);
@@ -19,21 +19,16 @@ export default function NewKnowledgeBaseArticle() {
   const [tagInput, setTagInput] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Get teacher info from session storage
-    const storedTeacher = sessionStorage.getItem('teacher');
-    if (!storedTeacher) {
-      router.push('/teacher-login');
+    if (status === 'loading') return; // Wait for session to load
+    if (status === 'unauthenticated' || !session?.user || session.user.role !== 'TEACHER') {
+      router.push('/login');
       return;
     }
-    
-    const teacherData = JSON.parse(storedTeacher);
-    setTeacher(teacherData);
-    
-    // Fetch knowledge bases
     fetchKnowledgeBases();
-  }, [router]);
+  }, [router, session, status]);
 
   const fetchKnowledgeBases = async () => {
     // In a real app, this would call the API to get knowledge bases from Bland AI
@@ -180,7 +175,7 @@ export default function NewKnowledgeBaseArticle() {
     'Other'
   ];
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>

@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Running a Local Postgres Instance
 
-## Getting Started
-
-First, run the development server:
+You can run a local Postgres database using Docker:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker run --name sage-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=sage -p 5432:5432 -d postgres:15
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This will start a Postgres server accessible at `localhost:5432` with:
+- **User:** `postgres`
+- **Password:** `postgres`
+- **Database:** `sage`
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Set your environment variable in a `.env` file at the project root:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sage"
+```
 
-## Learn More
+## Demo Setup
 
-To learn more about Next.js, take a look at the following resources:
+To prepare the project for a demo with sample data:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Run database migrations (if needed):**
+   ```bash
+   npx prisma migrate deploy
+   ```
+3. **Seed the database with demo data:**
+   ```bash
+   npm run db:seed
+   ```
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deploy on Vercel
+### Demo User Credentials
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Students:**
+- Email: `student1@university.edu` / Password: `password123`
+- Email: `student2@university.edu` / Password: `password123`
+- Email: `student3@university.edu` / Password: `password123`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Teachers:**
+- Email: `professor1@university.edu` / Password: `teacher123`
+- Email: `professor2@university.edu` / Password: `teacher123`
+- Email: `professor3@university.edu` / Password: `teacher123`
+
+### Demo Walkthrough
+
+1. **Student Login:**
+   - Log in as a student using the credentials above.
+   - Explore the student dashboard, request callbacks, and view knowledge articles.
+2. **Teacher Login:**
+   - Log in as a teacher using the credentials above.
+   - View and manage callback requests, respond to students, and access the knowledge base.
+3. **Switch Roles:**
+   - Use the login page to switch between student and teacher roles to showcase both perspectives.
